@@ -62,7 +62,7 @@ signal.signal(signal.SIGINT, signal_handler)
 """ Now, start our loop. """
 while(WORLD.ALIVE == True):
     SERVER.poll()
-    WORLD._tick()
+    WORLD._loop()
 SERVER.poll() # Poll one last time.
 
 for key in WORLD.PLAYERS.keys():

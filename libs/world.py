@@ -17,6 +17,20 @@ class world:
     
     """ Public commands available to characters. """
     
+    def broadcast(self, key, modifiers):
+        # Broadcast a message to all users of the MUD.
+        if(len(modifiers) > 0):
+            # They specified a message to broadcast.
+            message = ' '.join(modifiers) # Compile the list back into a string.
+            for key in self.PLAYERS.keys():
+                # Send the message to each user.
+                self.PLAYERS[key].send(message)
+            self.PLAYERS[key].set_tick_delay(3) # Force a 3-tick delay before the next command, to avoid spam.
+        else:
+            # They didn't include a message!
+            self.PLAYERS[key].send('You must specify a message to broadcast!')
+    
+    
     def quit(self, key, modifiers):
         # The user wishes to depart from our fine world.
         self.PLAYERS[key].quit()
@@ -99,12 +113,12 @@ class world:
             self.PLAYERS[key].send("I'm sorry, I don't understand the command '%s'." % (command))
     
     
-    def _tick(self):
+    def _loop(self):
         # This happens repeatedly, at an increment designated by self.TICK_LENGTH.
         self._kick_idle() # First, get rid of idle players.
         for key in self.PLAYERS.keys():
             # Now, update every player and get their latest action, if applicable.
-            update = self.PLAYERS[key].tick()
+            update = self.PLAYERS[key].process_input()
             if(update != ''):
                 # If they returned a legitimate action, append it to the list of updates for processing.
                 self.UPDATES.append((key, update))
@@ -112,12 +126,24 @@ class world:
         # Next we need to process all updates from all ticks executed thus far.
         self._update() # Get 'er dunn.
         
-        # Finally, we need to pause until the next tick.
-        now = time.time()                     # Get the time.
-        difference = now - self.LAST_TICK     # Get the time since our last tick.
-        pause = self.TICK_LENGTH - difference # Get the remaining time in our tick.
-        time.sleep(pause)                     # Sleep for that amount of time.
-        self.LAST_TICK = time.time()          # Update the time.
+        # Finally, we need to see if it's time for another tick.
+        now = time.time() # Get the time.
+        if(now > self.NEXT_TICK):
+            # We're ready.
+            self._tick()
+    
+    
+    def _tick(self):
+        # Execute this once per tick cycle.
+        for key in self.PLAYERS.keys():
+            # Update all players.
+            self.PLAYERS[key].tick()
+        
+        # Now that updates are complete, prepare our next tick.
+        now = time.time()                       # Update the time.
+        diff = now - self.NEXT_TICK             # Get the time passed since NEXT_TICK was last defined.
+        delta = self.TICK_LENGTH - diff         # See how long until our next tick.
+        self.NEXT_TICK = self.NEXT_TICK + delta # Set the next tick.
     
     
     def _update(self):
@@ -135,8 +161,8 @@ class world:
     
     def __init__(self):
         # Create the world.
-        self.LAST_TICK = time.time() # Set our initial tick time.
         self.COMMANDS = []           # This will become the list of commands.
+        self.NEXT_TICK = time.time() # Set the time for the next tick. (In this case, immediately.)
         for item in dir(self):
             # Scan every item in the world class.
             if((item[0] != '_') and hasattr(getattr(self, item), '__call__')):
