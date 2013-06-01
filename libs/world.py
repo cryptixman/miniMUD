@@ -5,7 +5,7 @@
 
 from libs import player
 from libs.log import log
-import time
+import time, textwrap
 
 class world:
     """ This is where the action happens! """
@@ -17,6 +17,11 @@ class world:
     
     """ Public commands available to characters. """
     
+    SUBSTITUTIONS = {
+        # This is a dict of short commands that expand into larger commands.
+        'bc': 'broadcast',
+    }
+    
     def broadcast(self, key, modifiers):
         # Broadcast a message to all users of the MUD.
         if(len(modifiers) > 0):
@@ -25,10 +30,16 @@ class world:
             for key in self.PLAYERS.keys():
                 # Send the message to each user.
                 self.PLAYERS[key].send(message)
-            self.PLAYERS[key].set_tick_delay(3) # Force a 3-tick delay before the next command, to avoid spam.
+            log('%s broadcast message: %s' % (key, message),'!') # Log about it, since this isn't something to take lightly.
+            self.PLAYERS[key].set_tick_delay(3)              # Force a 3-tick delay before the next command, to avoid spam.
         else:
             # They didn't include a message!
             self.PLAYERS[key].send('You must specify a message to broadcast!')
+    
+    
+    def help(self, key, modifiers):
+        # The user is asking for help!
+        self.PLAYERS[key].send('Help not yet implemented. Complain to the mods!')
     
     
     def quit(self, key, modifiers):
@@ -38,15 +49,15 @@ class world:
     
     def reboot(self, key, modifiers):
         # The user wants to reboot the server.
+        log('%s issued the command to reboot.' % key, '!')
         self.ALIVE = 'reboot'
         self._cleanup()
-        log('%s issued the command to reboot.' % key)
     
     
     def shutdown(self, key, modifiers):
         # The user hopes to shut down the server.
+        log('%s issued the command to shutdown.' % key, '!')
         self._cleanup()
-        log('%s issued the command to shutdown.' % key)
     
     
     """ Private functions for use by the server. """
@@ -104,7 +115,14 @@ class world:
     
     def _process_update(self, key, command, modifiers):
         # Take a piece of input, then act upon it.
-        cmd = self._auto_complete(command, self.COMMANDS)
+        cmd = ''
+        if(command in self.SUBSTITUTIONS.keys()):
+            # If the command is in the substitution list, substitute it.
+            cmd = self.SUBSTITUTIONS[command]
+        else:
+            # Otherwise, attempt to auto-complete the command.
+            cmd = self._auto_complete(command, self.COMMANDS)
+        
         if(cmd):
             # The command was found in the auto_complete.
             getattr(self, cmd)(key, modifiers) # Execute the command.

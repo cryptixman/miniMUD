@@ -4,6 +4,7 @@
 """
 
 from libs.log import log
+import textwrap
 
 class player:
     """ Each connected client becomes a player! """
@@ -33,9 +34,14 @@ class player:
                     self.send('Command queue cleared.') # Acknowledge the command,
                     self.QUEUE = []                     # then get it done.
                     self.WAIT  = 0                      # Also, now that there are no queued commands, there's no reason to wait.
-                else:
-                    # Add the command to the command queue.
-                    self.QUEUE.append(command)
+                    command = ''                        # Set the command to an empty string so it isn't added.
+                elif(command == '!'):
+                    # Repeat the last command they sent.
+                    command = self.LAST_CMD
+                # Now, add the command to the queue.
+                if(command != ''):
+                    self.LAST_CMD = command    # Set this as the last issued command.
+                    self.QUEUE.append(command) # Then append it to the command queue.
                 
             if(self.ready_for_next_command() and len(self.QUEUE) > 0):
                 # If we're ready for the player's next action, send it off.
@@ -43,6 +49,12 @@ class player:
             else:
                 # Otherwise, return an empty string.
                 return ''
+    
+    
+    def prompt(self):
+        # Return the user's current prompt.
+        prompt = '>'  # We start with the default greater-than sign, then move on from there.
+        return prompt # Return their prompt.
     
     
     def quit(self):
@@ -63,7 +75,9 @@ class player:
     
     def send(self, message):
         # Send a message to the player.
-        self.CLIENT.send('%s\n' % message)
+        wrapped_message = '\n'.join(textwrap.wrap(message, width = 79))
+        self.CLIENT.send('%s\n' % wrapped_message)
+        self.CLIENT.send('%s ' % self.prompt())
     
     
     def set_tick_delay(self, ticks):
@@ -87,3 +101,4 @@ class player:
         self.WAIT = 0                # Set wait to 0. This tells us how many tick we need to wait before getting the next command.
         self.STATE = 'live'          # Set the initial state of the player upon connecting.
         self.QUEUE = []              # Create an empty command queue.
+        self.LAST_CMD = ''           # Set the last command issued by the user.
