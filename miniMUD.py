@@ -76,4 +76,4 @@ if(WORLD.ALIVE == 'reboot'):
     SERVER = 0 # Release the server so the port isn't taken.
     os.execl(sys.argv[0],'') # Reboot the system.
 else:
-    log('Server halted.')
+    log('Shutdown complete.')

@@ -3,12 +3,12 @@
     This is where the meat of the game-code resides.
 """
 
-from libs import player
+from libs import player, zone
 from libs.log import log
-import time, textwrap
+import time, textwrap, glob
 
 class world:
-    """ This is where the action happens! """
+    """ Just a few variables. """
     PLAYERS = {}      # A dict of connected players, with addrport() as key.
     ALIVE = True      # Is the server alive?
     UPDATES = []      # A list of updates to execute in the world.
@@ -135,6 +135,9 @@ class world:
         for key in self.PLAYERS.keys(): # Then tell each user, then clean them up.
             self.PLAYERS[key].send('The server is %s. Please come back soon!' % doing)
             self.PLAYERS[key].cleanup()
+        for ID in self.ZONES.keys():
+            # Clean up the zones.
+            self.ZONES[ID].cleanup()
     
     
     def _drop_player(self, client):
@@ -263,3 +266,11 @@ class world:
             if((item[0] != '_') and hasattr(getattr(self, item), '__call__')):
                 # Find all the public commands, then add them to a list.
                 self.COMMANDS.append(item)
+        
+        # Load zones.
+        self.ZONES = {}
+        file_list = glob.glob('world/zones/*.*/') # Get a list of all zone folders.
+        for item in file_list:
+            # For each folder found, load that zone.
+            z = zone.zone(item)
+            self.ZONES[z.ID] = z # Append it to the list of zones.

@@ -1,0 +1,10 @@
+This is where zones are kept. Zones are named in a standard manner. The two parts of the name are the zone number and the zone name. The two are joined by a single full-stop, or period. Examples:
+
+0.The Hub
+1.Cavernous Cave
+2.Plain Plains
+3.Mountainous Mountains
+
+Zones are simply folders in which rooms reside. A zone description can be saved by writing a .nfo file about the zone. For an example, see Zone 0, The Hub.
+
+Each player has a zone to themselves. Their zones are stored in 'Home.PlayerName' folders. The 'Home.Default' folder contains the basic template from which each of these homes is based. Homes are where users enter the game. People don't just drop in wherever they last left off, because that could be dangerous. Player homes allow the user a moment of peace, where they can manage their gear and prepare to enter the game again. They can store items and trophies of their adventures. Each home has an exit leading to the last location they had been in the game. Homes can also contain gateways to various other locations throughout the world, such as The Hub.
