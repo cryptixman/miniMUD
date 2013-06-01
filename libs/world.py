@@ -24,17 +24,22 @@ class world:
     
     def broadcast(self, key, modifiers):
         # Broadcast a message to all users of the MUD.
-        if(len(modifiers) > 0):
-            # They specified a message to broadcast.
-            message = ' '.join(modifiers) # Compile the list back into a string.
-            for key in self.PLAYERS.keys():
-                # Send the message to each user.
-                self.PLAYERS[key].send(message)
-            log('%s broadcast message: %s' % (key, message),'!') # Log about it, since this isn't something to take lightly.
-            self.PLAYERS[key].set_tick_delay(3)              # Force a 3-tick delay before the next command, to avoid spam.
+        if(self.PLAYERS[key].ROLE > 1):
+            # Restrict this command to mods and admins.
+            if(len(modifiers) > 0):
+                # They specified a message to broadcast.
+                message = ' '.join(modifiers) # Compile the list back into a string.
+                for key in self.PLAYERS.keys():
+                    # Send the message to each user.
+                    self.PLAYERS[key].send(message)
+                log('%s broadcast message: %s' % (key, message),'!') # Log about it, since this isn't something to take lightly.
+                self.PLAYERS[key].set_tick_delay(3)                  # Force a 3-tick delay before the next command, to avoid spam.
+            else:
+                # They didn't include a message!
+                self.PLAYERS[key].send('You must specify a message to broadcast!')
         else:
-            # They didn't include a message!
-            self.PLAYERS[key].send('You must specify a message to broadcast!')
+            # This person isn't an admin or mod.
+            self.PLAYERS[key].send('You must be a moderator or admin to broadcast messages.')
     
     
     def help(self, key, modifiers):
@@ -49,15 +54,49 @@ class world:
     
     def reboot(self, key, modifiers):
         # The user wants to reboot the server.
-        log('%s issued the command to reboot.' % key, '!')
-        self.ALIVE = 'reboot'
-        self._cleanup()
+        if(self.PLAYERS[key].ROLE == 2):
+            # Restrict this command to admins.
+            log('%s issued the command to reboot.' % key, '!')
+            self.ALIVE = 'reboot'
+            self._cleanup()
+        else:
+            # They're not allowed.
+            self.PLAYERS[key].send('You must be an admin to reboot the server.')
     
     
     def shutdown(self, key, modifiers):
         # The user hopes to shut down the server.
-        log('%s issued the command to shutdown.' % key, '!')
-        self._cleanup()
+        if(self.PLAYERS[key].ROLE == 2):
+            # Restrict this command to admins.
+            log('%s issued the command to shutdown.' % key, '!')
+            self._cleanup()
+        else:
+            # They're not allowed.
+            self.PLAYERS[key].send('You must be an admin to shutdown the server.')
+    
+    
+    def tell(self, key, modifiers):
+        # Tell something to someone.
+        if(len(modifiers) < 2):
+            # They didn't do it right.
+            self.PLAYERS[key].send('Tell who what?')
+        else:
+            speaker_name  = self._key2name(key)           # Get the name of the speaker.
+            listener_name = self._auto_complete(modifiers[0], self._player_list()) # Get the name of the listener.
+            listener_key  = self._name2key(listener_name) # Get the listener's key.
+            message       = ' '.join(modifiers[1:])       # Get the message.
+            if(speaker_name == None or listener_name == None or listener_key == None):
+                # Something went wrong.
+                self.PLAYERS[key].send('Could not find that player!')
+            else:
+                # Send some messages.
+                for player_key in self.PLAYERS.keys():
+                    if(player_key == key):
+                        # If this is the sender...
+                        self.PLAYERS[player_key].send('You told %s: %s' % (listener_name, message))
+                    else:
+                        # Otherwise...
+                        self.PLAYERS[player_key].send('%s tells you: %s' % (speaker_name, message))
     
     
     """ Private functions for use by the server. """
@@ -103,6 +142,14 @@ class world:
         del self.PLAYERS[client.addrport()]
     
     
+    def _key2name(self, key):
+        # Get the name of the specified player.
+        try:
+            return self.PLAYERS[key].NAME
+        except:
+            return None
+    
+    
     def _kick_idle(self):
         # Check for idle clients, then drop them.
         for key in self.PLAYERS.keys():
@@ -117,6 +164,22 @@ class world:
         # Move player or mob (key) to room designation (rm).
         log('%s moved to room %s' % (key, rm)) # Pretend like we moved them.
         self.PLAYERS[key].send(' ') # Give 'em a prompt. (This will work differently when I create rooms and zones.)
+    
+    
+    def _name2key(self, name):
+        # Get the key of the specified player.
+        for key in self.PLAYERS.keys():
+            if(self.PLAYERS[key].NAME == name):
+                return key
+        return None
+    
+    
+    def _player_list(self):
+        # Get a list of player names.
+        names = []
+        for key in self.PLAYERS.keys():
+            names.append(self.PLAYERS[key].NAME)
+        return names
     
     
     def _process_update(self, key, command, modifiers):

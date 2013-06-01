@@ -146,7 +146,7 @@ class player:
                         self.state_change('authenticated','Welcome to the world!\n')
                         if(self.first_player()):
                             # If they're the first player created, make 'em an Admin.
-                            self.ROLE = '2'
+                            self.ROLE = 2
                         self.save() # Save the new character.
                     else:
                         # They picked a non-gender.
@@ -223,7 +223,7 @@ class player:
                 self.SEX = line.split(':')[1]
             elif(setting == 'role'):
                 # Load the role from the list.
-                self.ROLE = line.split(':')[1]
+                self.ROLE = int(line.split(':')[1])
         log('Character loaded (%s).' % (self.NAME), '>')
     
     
@@ -234,7 +234,7 @@ class player:
         lines = [
             'name:%s' % (self.NAME),
             'pass:%s' % (self.PASSWORD),
-            'role:%s' % (self.ROLE),
+            'role:%d' % (self.ROLE),
             'sex:%s'  % (self.SEX),
             'room:%s' % (self.ROOM)
         ]
@@ -287,4 +287,4 @@ class player:
         self.ROOM = '0.0'            # Set the starting room. All users start in zone 0, room 0 upon first creation.
         self.PASSWORD = ''           # This is where the user's password hash is stored.
         self.SEX = ''                # What's their gender?
-        self.ROLE = '0'              # Normal user by default. 0 = Normal, 1 = Moderator, 2 = Admin.
+        self.ROLE = 0                # Normal user by default. 0 = Normal, 1 = Moderator, 2 = Admin.
