@@ -110,7 +110,13 @@ class world:
             if(self.PLAYERS[key].CLIENT.idle() > 300):
                 # If it's been idle for more than 5 minutes,
                 self.PLAYERS[key].CLIENT.active = False  # Set it as inactive,
-                log('%s timed out.' % client.addrport()) # then log about it.
+                log('%s timed out.' % self.PLAYERS[key].ID) # then log about it.
+    
+    
+    def _move(self, key, rm):
+        # Move player or mob (key) to room designation (rm).
+        log('%s moved to room %s' % (key, rm)) # Pretend like we moved them.
+        self.PLAYERS[key].send(' ') # Give 'em a prompt. (This will work differently when I create rooms and zones.)
     
     
     def _process_update(self, key, command, modifiers):
@@ -134,6 +140,14 @@ class world:
     def _loop(self):
         # This happens repeatedly, at an increment designated by self.TICK_LENGTH.
         self._kick_idle() # First, get rid of idle players.
+        for key in self.PLAYERS.keys():
+            # Now we need to check for newly authenticated users.
+            if(self.PLAYERS[key].STATE == 'authenticated'):
+                # This player has completed login and needs to be placed in their beginning room.
+                self._move(key, self.PLAYERS[key].ROOM) # Move the player.
+                self.PLAYERS[key].state_change('live')  # Make them live.
+                log('%s logged in as %s.' % (key, self.PLAYERS[key].NAME)) # Log about it.
+        
         for key in self.PLAYERS.keys():
             # Now, update every player and get their latest action, if applicable.
             update = self.PLAYERS[key].process_input()

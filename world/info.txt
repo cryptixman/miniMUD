@@ -1,0 +1,1 @@
+Within this folder, the world resides. This includes players, objects, rooms, etc.

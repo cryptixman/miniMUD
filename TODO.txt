@@ -1,3 +1,21 @@
 TODO
 
 - Design user login system.
+  - States still required:
+    IF THEY ARE NEW:
+    * verify_name -- make sure they picked the right name.
+      - yes? choose_password
+      - no?  get_name
+    * new_password -- get their new password
+      - set the local password, then verify_password
+    * verify_password -- get the password again, to be sure it matches
+      - yes? choose_gender
+      - no?  new_password
+    * choose_gender -- male or female? (don't bother with others)
+      - Is gender legit? verify_character
+      - If not, choose_gender again
+    * verify_character -- show them the entire character so far, and make sure it's all good.
+      - If not, start over. Clear set variables then get_name
+      - If so, save new character and set status to authenticated.
+    
+    Now, when the character's state reaches 'authenticated,' load them into their room so they see their surroundings. Then set their status to 'live.'

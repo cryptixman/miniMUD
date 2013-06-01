@@ -1,3 +1,4 @@
+world/players/*.plr
 */.svn
 *.log
 */*.log
