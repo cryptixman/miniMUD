@@ -10,6 +10,15 @@ def hash(string):
     # Get the sha1 hash of the provided string.
     return hashlib.sha1(string.encode("utf8")).hexdigest() # Return the hash.
 
+def wrap(message):
+    """ Force line-wrapping for a message. Lines are wrapped at 80+ characters. """
+    lines = message.split('\n') # We want to respect pre-existing line-breaks.
+    output = []                 # This is our output buffer.
+    for line in lines:
+        # For each line, let's wrap it.
+        output.append('\n'.join(textwrap.wrap(line, width=80))) # Wrap the lines.
+    return '\n'.join(output)                                    # Then return them.
+
 class player:
     """ Each connected client becomes a player! """
     
@@ -81,56 +90,56 @@ class player:
                 if(self.STATE == 'new'):
                     # They just connected.
                     greeting = open('world/text/greeting.txt','r').read() # Get the greeting.
-                    self.state_change('get_name','%s\n\nWhat is the name of your character? ' % (greeting)) # Now show them a greeting and ask for their name.
+                    self.state_change('get_name','\n%s\n\nWhat is the name of your character? ' % (greeting)) # Now show them a greeting and ask for their name.
                 
                 elif(command and self.STATE == 'get_name'):
                     # They have provided a name.
                     if(not command.isalpha()):
                         # Their name has non-letters in it. Tsk, tsk.
-                        self.state_change('get_name', 'Names must be one word, no special characters or numbers.\n\nWhatis the name of your character? ')
+                        self.state_change('get_name', '\nNames must be one word, no special characters or numbers.\n\nWhatis the name of your character? ')
                     else:
                         # Their name is fine.
                         self.NAME = command.lower().capitalize() # Assign it to the player. Also, capitalize only the first letter.
                         if(self.player_exists(self.NAME)):
                             # This player has already been created.
-                            self.state_change('get_password','What is the password for that character? ')
+                            self.state_change('get_password','\nWhat is the password for that character? ')
                         else:
                             # This player is new!
-                            self.state_change('verify_name','Did I get that right, %s? [y/n] ' % (self.NAME))
+                            self.state_change('verify_name','\nDid I get that right, %s? [y/n] ' % (self.NAME))
                 
                 elif(command and self.STATE == 'get_password'):
                     # They have chosen a pre-existing character, so we need to make sure the password is legit.
                     pwd = hash(command.strip()) # Get the sha1 hash of that password.
                     if(self.check_pass(pwd)):
                         # Correct password.
-                        self.state_change('authenticated','Welcome back!\n')
+                        self.state_change('authenticated','\nWelcome back!\n\n')
                         self.restore() # Load the character from its file.
                     else:
                         # Incorrect password.
-                        self.state_change('get_password','Incorrect password, please try again.\nWhat is the password for that character? ')
+                        self.state_change('get_password','\nIncorrect password, please try again.\nWhat is the password for that character? ')
                 
                 elif(command and self.STATE == 'verify_name'):
                     # Make sure they got the name right.
                     if(command.lower()[0] == 'y'):
                         # They approve! Time to choose a password.
-                        self.state_change('choose_password','What would you like your password to be? ')
+                        self.state_change('choose_password','\nWhat would you like your password to be? ')
                     else:
                         # They don't, or they pressed the wrong key. Try again.
-                        self.state_change('get_name','Alright, well who are you, then? ')
+                        self.state_change('get_name','\nAlright, well who are you, then? ')
                 
                 elif(command and self.STATE == 'choose_password'):
                     # They've chosen a password.
                     self.PASSWORD = hash(command) # Get its hash.
-                    self.state_change('verify_password','Please type your password again. ')
+                    self.state_change('verify_password','\nPlease type your password again. ')
                 
                 elif(command and self.STATE == 'verify_password'):
                     # They've attempted to verify their chosen password.
                     if(self.PASSWORD == hash(command)):
                         # We've got a match.
-                        self.state_change('choose_gender','Please choose a gender. [m/f] ')
+                        self.state_change('choose_gender','\nPlease choose a gender. [m/f] ')
                     else:
                         # Nope.
-                        self.state_change('choose_password','Bad match. What password would you like? ')
+                        self.state_change('choose_password','\nBad match. What password would you like? ')
                 
                 elif(command and self.STATE == 'choose_gender'):
                     # Male, Female, take your pick.
@@ -143,14 +152,14 @@ class player:
                         self.SEX = 'female'
                     if(self.SEX != ''):
                         # Successfully chosen.
-                        self.state_change('authenticated','Welcome to the world!\n')
+                        self.state_change('authenticated','\nWelcome to the world!\n\n')
                         if(self.first_player()):
                             # If they're the first player created, make 'em an Admin.
                             self.ROLE = 2
                         self.save() # Save the new character.
                     else:
                         # They picked a non-gender.
-                        self.state_change('choose_gender','You must pick male or female.\nPlease choose a gender. [m/f] ')
+                        self.state_change('choose_gender','\nYou must pick male or female.\nPlease choose a gender. [m/f] ')
                 
             return ''
         else:
@@ -247,9 +256,7 @@ class player:
     
     def send(self, message):
         # Send a message to the player.
-        wrapped_message = '\n'.join(textwrap.wrap(message, width = 79))
-        self.CLIENT.send('%s\n' % wrapped_message)
-        self.CLIENT.send('%s ' % self.prompt())
+        self.CLIENT.send('\n%s\n%s ' % (wrap(message), self.prompt()))
     
     
     def set_tick_delay(self, ticks):

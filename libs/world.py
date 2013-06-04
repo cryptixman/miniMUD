@@ -47,9 +47,33 @@ class world:
         self.PLAYERS[key].send('Help not yet implemented. Complain to the mods!')
     
     
+    def look(self, key, modifiers):
+        # The player wishes to look at something.
+        player_zone = self.PLAYERS[key].ROOM.split('.')[0] # We need to know what zone
+        player_room = self.PLAYERS[key].ROOM.split('.')[1] # and room the player is in.
+        output = ''
+        
+        # Now we need to figure out what they're looking at.
+        if(modifiers == []):
+            # They didn't specify a target, so show them the room.
+            output = self.ZONES[player_zone].ROOMS[player_room].get_desc(key)
+        
+        # Finally, send them the output.
+        self.PLAYERS[key].send(output)
+    
+    
     def quit(self, key, modifiers):
         # The user wishes to depart from our fine world.
-        self.PLAYERS[key].quit()
+        player_location = self.PLAYERS[key].ROOM    # Find out where the player currently resides.
+        player_zone = player_location.split('.')[0] # Get the zone
+        player_room = player_location.split('.')[1] # and room IDs.
+        # Now, remove them from the room, then alert the players in the room that they've left.
+        self.ZONES[player_zone].ROOMS[player_room].drop_player(key) # Drop the player from the room.
+        players = self.ZONES[player_zone].ROOMS[player_room].PLAYERS.keys()
+        for player in players:
+            # Now tell each player in the room about the disconnect.
+            self.PLAYERS[player].send('%s fades into the ether.' % (self._key2name(key)))
+        self.PLAYERS[key].quit() # Disconnect the player.
     
     
     def reboot(self, key, modifiers):
@@ -145,6 +169,16 @@ class world:
         del self.PLAYERS[client.addrport()]
     
     
+    def _get_exit_name(self, current, target):
+        # Get the name of an exit from the room.
+        current_zone = current.split('.')[0]
+        current_room = current.split('.')[1]
+        for key in self.ZONES[current_zone].ROOMS[current_room].EXITS:
+            if(self.ZONES[current_zone].ROOMS[current_room].EXITS[key] == target):
+                return key
+        return 'Unknown'
+    
+    
     def _key2name(self, key):
         # Get the name of the specified player.
         try:
@@ -161,46 +195,6 @@ class world:
                 # If it's been idle for more than 5 minutes,
                 self.PLAYERS[key].CLIENT.active = False  # Set it as inactive,
                 log('%s timed out.' % self.PLAYERS[key].ID) # then log about it.
-    
-    
-    def _move(self, key, rm):
-        # Move player or mob (key) to room designation (rm).
-        log('%s moved to room %s' % (key, rm)) # Pretend like we moved them.
-        self.PLAYERS[key].send(' ') # Give 'em a prompt. (This will work differently when I create rooms and zones.)
-    
-    
-    def _name2key(self, name):
-        # Get the key of the specified player.
-        for key in self.PLAYERS.keys():
-            if(self.PLAYERS[key].NAME == name):
-                return key
-        return None
-    
-    
-    def _player_list(self):
-        # Get a list of player names.
-        names = []
-        for key in self.PLAYERS.keys():
-            names.append(self.PLAYERS[key].NAME)
-        return names
-    
-    
-    def _process_update(self, key, command, modifiers):
-        # Take a piece of input, then act upon it.
-        cmd = ''
-        if(command in self.SUBSTITUTIONS.keys()):
-            # If the command is in the substitution list, substitute it.
-            cmd = self.SUBSTITUTIONS[command]
-        else:
-            # Otherwise, attempt to auto-complete the command.
-            cmd = self._auto_complete(command, self.COMMANDS)
-        
-        if(cmd):
-            # The command was found in the auto_complete.
-            getattr(self, cmd)(key, modifiers) # Execute the command.
-        else:
-            # The command was not found in the auto_complete.
-            self.PLAYERS[key].send("I'm sorry, I don't understand the command '%s'." % (command))
     
     
     def _loop(self):
@@ -229,6 +223,90 @@ class world:
         if(now > self.NEXT_TICK):
             # We're ready.
             self._tick()
+    
+    
+    def _move(self, key, rm):
+        # Move player or mob (key) to room designation (rm).
+        
+        # First, we determine where they are, and where they're going.
+        current = self.PLAYERS[key].ROOM     # Find out where they are.
+        current_zone = current.split('.')[0] # Then get the zone
+        current_room = current.split('.')[1] # and the room.
+        target_zone = rm.split('.')[0]       # Next, find out where they're going. Zone,
+        target_room = rm.split('.')[1]       # and room.
+        
+        removed = self.ZONES[current_zone].ROOMS[current_room].drop_player(key) # Remove the player from their current room.
+        if(removed): # This only happens if the player actually existed in the room they were dropped from.
+            # Tell everyone in the room of that player's departure.
+            exit_name = self._get_exit_name(current, rm) # Figure out the name of the exit the player took.
+            for player in self.ZONES[current_zone].ROOMS[current_room].PLAYERS.keys():
+                # For every player still in the room, let them know of the player's movement.
+                self.PLAYERS[player].send('%s departed to the %s.' % (self._key2name(key), exit_name))
+        
+        # Now, tell everyone in the new room of that player's arrival.
+        for player in self.ZONES[target_zone].ROOMS[target_room].PLAYERS.keys():
+            # For every player in the new room, let them know of the player's arrival.
+            self.PLAYERS[player].send('%s has arrived.' % (self._key2name(key)))
+        
+        self.ZONES[target_zone].ROOMS[target_room].add_player(key, self._key2name(key)) # Add the player to the new room.
+        self.PLAYERS[key].ROOM = rm # Set their room to the room they moved to.
+        self.look(key,[]) # This will show the user their new surroundings.
+    
+    
+    def _name2key(self, name):
+        # Get the key of the specified player.
+        for key in self.PLAYERS.keys():
+            if(self.PLAYERS[key].NAME == name):
+                return key
+        return None
+    
+    
+    def _player_list(self):
+        # Get a list of player names.
+        names = []
+        for key in self.PLAYERS.keys():
+            names.append(self.PLAYERS[key].NAME)
+        return names
+    
+    
+    def _process_update(self, key, command, modifiers):
+        # Take a piece of input, then act upon it.
+        cmd = ''
+        
+        # First, we need to get a list of exits available to that player.
+        location = self.PLAYERS[key].ROOM    # Get their room.
+        player_zone = location.split('.')[0] # Split it into zone
+        player_room = location.split('.')[1] # and room.
+        exits = self.ZONES[player_zone].ROOMS[player_room].exits() # Get the list of exits for that room.
+        
+        if(command in self.SUBSTITUTIONS.keys()):
+            # If the command is in the substitution list, substitute it.
+            cmd = self.SUBSTITUTIONS[command]
+        else:
+            # Otherwise, attempt to auto-complete the command.
+            
+            # Combine all available commands into a single list.
+            available_commands = self.COMMANDS + exits
+            # Then we sort the list.
+            available_commands.sort()
+            
+            # Finally, we attempt to auto-complete their partial command based on the list of commands available.
+            cmd = self._auto_complete(command, available_commands)
+        
+        if(cmd):
+            # The command was found in the auto_complete.
+            try:
+                # First we attempt to execute it as a function.
+                getattr(self, cmd)(key, modifiers)
+            except:
+                # The command isn't one that's built-in. These require special processing.
+                if(cmd in exits):
+                    # The command they provided is one of the exits. So, move them to that room.
+                    target_room = self.ZONES[player_zone].ROOMS[player_room].EXITS[cmd]
+                    self._move(key, target_room)
+        else:
+            # The command was not found in the auto_complete.
+            self.PLAYERS[key].send("I'm sorry, I don't understand the command '%s'." % (command))
     
     
     def _tick(self):
@@ -274,3 +352,28 @@ class world:
             # For each folder found, load that zone.
             z = zone.zone(item)
             self.ZONES[z.ID] = z # Append it to the list of zones.
+        
+        # Sanity check all rooms and exits.
+        log('Performing sanity check...')
+        rooms = []
+        exits = []
+        # Compile a list of all room designators and all exits from all rooms.
+        for z in self.ZONES.keys():
+            for r in self.ZONES[z].ROOMS.keys():
+                # For each room in each zone, append that room's designator to the list of rooms.
+                rooms.append('%s.%s' % (z,r))
+                for item in self.ZONES[z].ROOMS[r].exits():
+                    des = self.ZONES[z].ROOMS[r].EXITS[item]
+                    if(des not in exits):
+                        exits.append(des)
+        # then see if any exist in the exits that aren't in the rooms.
+        failures = []
+        for item in exits:
+            if(item not in rooms):
+                failures.append(item)
+        if(len(failures) > 0):
+            log('Sanity check failed. Undefined rooms:','!')
+            log(' '.join(failures), '!')
+            self.ALIVE = False
+        else:
+            log('Sanity check passed!')

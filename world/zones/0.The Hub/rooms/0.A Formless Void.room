@@ -1,0 +1,11 @@
+# Settings
+settings:none
+
+# A description of the room. Ends with '---'.
+description:
+    You are surrounded by a formless white light, infinitely bright yet not painful to the eye. There is no way to know the bounds of this space, if indeed it has bounds at all.
+    The only possible exit seems to come from an incredibly dark portal nearby. The light from this place seems to be leaking into the black expanse beyond the portal.
+---
+
+# Room exits. (zone.room)
+exit.portal:0.1

@@ -1,6 +1,11 @@
+miniMUD.komodoproject
 world/players/*.plr
 */.svn
 *.log
 */*.log
 */*.pyc
 .DS_Store
+*/.DS*
+*/*/.DS*
+*/*/*/.DS*
+*/*/*/*/.DS*

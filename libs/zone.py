@@ -4,6 +4,8 @@
 """
 
 from libs.log import log
+from libs import room
+import glob
 
 class zone:
     
@@ -11,6 +13,8 @@ class zone:
         # Shut down and save the zone.
         self.save()
         # Next, clean up all the rooms.
+        for ID in self.ROOMS.keys():
+            self.ROOMS[ID].cleanup()
     
     
     def load(self):
@@ -22,7 +26,12 @@ class zone:
     
     def load_rooms(self):
         # Load the rooms in the zone.
-        pass
+        rooms = glob.glob('world/zones/%s.%s/rooms/*.room' % (self.ID, self.NAME)) # Get a list of rooms.
+        for filename in rooms:
+            # Load each room.
+            rm = room.room(filename)         # Create a new room,
+            rm.apply_settings(self.SETTINGS) # apply zone-wide settings,
+            self.ROOMS[rm.ID] = rm           # then append it to the list.
     
     
     def read_nfo(self):
@@ -46,7 +55,7 @@ class zone:
             
             elif(setting == 'description'):
                 # Grab the zone's description.
-                desc = line.split(':')[1] # Get the first line of the description.
+                desc = lines.pop(0)       # Get the first line of the description.
                 line = lines.pop(0)       # Then grab the next line.
                 while(line != '---'):
                     # We end the description with ---
@@ -68,7 +77,8 @@ class zone:
             'settings:%s' % (settings),
             '',
             "# A description of the zone. Ends with '---'.",
-            'description:%s' % (self.DESC),
+            'description:',
+            '%s' % (self.DESC),
             '---'
         ]
         
@@ -82,6 +92,12 @@ class zone:
             nfo_file.write('%s\n' % (line))
         nfo_file.close() # Close the file.
         log('Zone saved: %s.%s' % (self.ID, self.NAME), '<')
+    
+    
+    def tick(self):
+        # Update the zone.
+        for key in self.ROOMS.keys():
+            self.ROOMS[key].tick()
     
     
     def __init__(self, path):
