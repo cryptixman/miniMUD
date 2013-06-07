@@ -1,7 +1,7 @@
 TODO
 
+- Figure out how to use "help" and populate it with commands and give information about the game.
+- Prevent users from registering names that are reserved. (Commands, already registered names, NPCs, items, etc.)
+
 FUTURE IDEAS
 
-- Limit output to a specified number of lines. Allow users to hit enter or type 'continue' to finish outputting the line, or type any other command
-  to clear the buffer and do something else. This should be automatic. Max 20 lines.
-- Even better, if we can somehow determine the size of the terminal our player is using, we can make this automatic.

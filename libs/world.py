@@ -20,6 +20,18 @@ class world:
     SUBSTITUTIONS = {
         # This is a dict of short commands that expand into larger commands.
         'bc': 'broadcast',
+        'l' : 'look',
+        'n' : 'north',
+        'ne': 'northeast',
+        'e' : 'east',
+        'se': 'southeast',
+        's' : 'south',
+        'sw': 'southwest',
+        'w' : 'west',
+        'nw': 'northwest',
+        'u' : 'up',
+        'd' : 'down',
+        "'" : 'say',
     }
     
     def broadcast(self, key, modifiers):
@@ -42,6 +54,22 @@ class world:
             self.PLAYERS[key].send('You must be a moderator or admin to broadcast messages.')
     
     
+    def emote(self, key, modifiers):
+        # The user wants to emote something to the people in the room.
+        message = ' '.join(modifiers) # Coagulate the message.
+        speaker = self._key2name(key) # Get the name of the speaker.
+        self.PLAYERS[key].send('You emote: %s %s' % (speaker, message)) # Tell the speaker what they've emoted.
+        # Now we need to get all the keys of all the players in the room.
+        # We start by getting the zone and room ID for the speaking player.
+        (player_zone, player_room) = self._get_zone_and_room(key)
+        # Now that that's taken care of, let's get the player list.
+        players = self.ZONES[player_zone].ROOMS[player_room].PLAYERS.keys()
+        # Now, let's send them the emote.
+        for player in players:
+            if(player != key):
+                self.PLAYERS[player].send('%s %s' % (speaker, message))
+    
+    
     def help(self, key, modifiers):
         # The user is asking for help!
         self.PLAYERS[key].send('Help not yet implemented. Complain to the mods!')
@@ -49,8 +77,7 @@ class world:
     
     def look(self, key, modifiers):
         # The player wishes to look at something.
-        player_zone = self.PLAYERS[key].ROOM.split('.')[0] # We need to know what zone
-        player_room = self.PLAYERS[key].ROOM.split('.')[1] # and room the player is in.
+        (player_zone, player_room) = self._get_zone_and_room(key) # Get the zone and room of the player.
         output = ''
         
         # Now we need to figure out what they're looking at.
@@ -64,9 +91,7 @@ class world:
     
     def quit(self, key, modifiers):
         # The user wishes to depart from our fine world.
-        player_location = self.PLAYERS[key].ROOM    # Find out where the player currently resides.
-        player_zone = player_location.split('.')[0] # Get the zone
-        player_room = player_location.split('.')[1] # and room IDs.
+        (player_zone, player_room) = self._get_zone_and_room(key) # Get the zone and room of the player.
         # Now, remove them from the room, then alert the players in the room that they've left.
         self.ZONES[player_zone].ROOMS[player_room].drop_player(key) # Drop the player from the room.
         players = self.ZONES[player_zone].ROOMS[player_room].PLAYERS.keys()
@@ -86,6 +111,22 @@ class world:
         else:
             # They're not allowed.
             self.PLAYERS[key].send('You must be an admin to reboot the server.')
+    
+    
+    def say(self, key, modifiers):
+        # The user wants to say something to the people in the room.
+        message = ' '.join(modifiers) # Coagulate the message.
+        speaker = self._key2name(key) # Get the name of the speaker.
+        self.PLAYERS[key].send('You say: %s' % (message)) # Tell the speaker what they've said.
+        # Now we need to get all the keys of all the players in the room.
+        # We start by getting the zone and room ID for the speaking player.
+        (player_zone, player_room) = self._get_zone_and_room(key) # Get the zone and room of the player.
+        # Now that that's taken care of, let's get the player list.
+        players = self.ZONES[player_zone].ROOMS[player_room].PLAYERS.keys()
+        # Now, let's send them the message.
+        for player in players:
+            if(player != key):
+                self.PLAYERS[player].send('%s says: %s' % (speaker, message))
     
     
     def shutdown(self, key, modifiers):
@@ -177,6 +218,14 @@ class world:
             if(self.ZONES[current_zone].ROOMS[current_room].EXITS[key] == target):
                 return key
         return 'Unknown'
+    
+    
+    def _get_zone_and_room(self, key):
+        # We need to know the room and zone of the player specified.
+        location = self.PLAYERS[key].ROOM # Get the location of the player.
+        zone = location.split('.')[0]     # Extract the zone,
+        room = location.split('.')[1]     # and the room.
+        return (zone, room)               # Then return them both.
     
     
     def _key2name(self, key):
@@ -274,9 +323,7 @@ class world:
         cmd = ''
         
         # First, we need to get a list of exits available to that player.
-        location = self.PLAYERS[key].ROOM    # Get their room.
-        player_zone = location.split('.')[0] # Split it into zone
-        player_room = location.split('.')[1] # and room.
+        (player_zone, player_room) = self._get_zone_and_room(key)  # Get the zone and room of the player.
         exits = self.ZONES[player_zone].ROOMS[player_room].exits() # Get the list of exits for that room.
         
         if(command in self.SUBSTITUTIONS.keys()):

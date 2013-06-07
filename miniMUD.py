@@ -17,7 +17,7 @@ new_log()   # Start a fresh log.
 """ Let's display our tagline! """
 tagline = [
     '/------------------------\\',
-    '|     miniMUD  v0.02     |',
+    '|     miniMUD  v0.03     |',
     '| by Christopher Steffen |',
     '\\------------------------/'
 ]

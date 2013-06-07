@@ -10,14 +10,21 @@ def hash(string):
     # Get the sha1 hash of the provided string.
     return hashlib.sha1(string.encode("utf8")).hexdigest() # Return the hash.
 
-def wrap(message):
-    """ Force line-wrapping for a message. Lines are wrapped at 80+ characters. """
+def wrap(message, rows, columns):
+    # Force line-wrapping for a message. This automatically conforms to the user's window size.
     lines = message.split('\n') # We want to respect pre-existing line-breaks.
     output = []                 # This is our output buffer.
     for line in lines:
         # For each line, let's wrap it.
-        output.append('\n'.join(textwrap.wrap(line, width=80))) # Wrap the lines.
-    return '\n'.join(output)                                    # Then return them.
+        output += textwrap.wrap(line, width=columns) # Wrap the lines.
+    # Now we need to get only enough lines that we can print to the screen.
+    rows = rows - 2 # Give us some wiggle room.
+    buff = '\n'.join(output[rows:])   # The buffer remaining.
+    output = '\n'.join(output[:rows]) # The output.
+    if(buff != ''):
+        # There's an overflow, so let's tell the user to hit 'enter' to continue.
+        output += '\n(Hit enter to continue.)'
+    return (buff, output) # Then return them.
 
 class player:
     """ Each connected client becomes a player! """
@@ -168,7 +175,10 @@ class player:
             if(self.CLIENT.cmd_ready and self.CLIENT.active):
                 # If they've got input for us, process it.
                 command = self.CLIENT.get_command().strip()
-                if(command.lower() == 'halt'):
+                if(command == ''):
+                    # The user sent no input, just hit enter. If there's any output in the buffer, we should print more of it.
+                    self.send(self.BUFFER)
+                elif(command.lower() == 'halt'):
                     # The 'halt' command clears all commands on the stack. It must be typed in full, not auto-completed.
                     self.send('Command queue cleared.') # Acknowledge the command,
                     self.QUEUE = []                     # then get it done.
@@ -256,7 +266,10 @@ class player:
     
     def send(self, message):
         # Send a message to the player.
-        self.CLIENT.send('\n%s\n%s ' % (wrap(message), self.prompt()))
+        rows = self.CLIENT.rows
+        columns = self.CLIENT.columns
+        (self.BUFFER, output) = wrap(message, rows, columns)
+        self.CLIENT.send('\n%s\n%s ' % (output, self.prompt()))
     
     
     def set_tick_delay(self, ticks):
@@ -279,6 +292,7 @@ class player:
         if(self.WAIT > 0):
             # If we're still waiting on ticks to pass,
             self.WAIT = self.WAIT - 1 # Decrement the counter.
+        self.CLIENT.request_naws()
     
     
     def __init__(self, client):
@@ -295,3 +309,4 @@ class player:
         self.PASSWORD = ''           # This is where the user's password hash is stored.
         self.SEX = ''                # What's their gender?
         self.ROLE = 0                # Normal user by default. 0 = Normal, 1 = Moderator, 2 = Admin.
+        self.BUFFER = ''             # This is a buffer of lines, in case of overflow.
