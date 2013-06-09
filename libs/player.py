@@ -23,7 +23,7 @@ def wrap(message, rows, columns):
     output = '\n'.join(output[:rows]) # The output.
     if(buff != ''):
         # There's an overflow, so let's tell the user to hit 'enter' to continue.
-        output += '\n(Hit enter to continue.)'
+        output += '\n(Hit enter to continue, or type a command.)'
     return (buff, output) # Then return them.
 
 class player:
@@ -175,6 +175,10 @@ class player:
             if(self.CLIENT.cmd_ready and self.CLIENT.active):
                 # If they've got input for us, process it.
                 command = self.CLIENT.get_command().strip()
+                if(command != ''):
+                    # They sent a command, clear the buffer.
+                    self.BUFFER = ''
+                
                 if(command == ''):
                     # The user sent no input, just hit enter. If there's any output in the buffer, we should print more of it.
                     self.send(self.BUFFER)

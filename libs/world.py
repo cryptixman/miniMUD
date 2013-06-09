@@ -205,9 +205,73 @@ class world:
             self.ZONES[ID].cleanup()
     
     
+    def _custom_emote(self, key, cmd, modifiers):
+        # The user is using a custom emote.
+        (aimless, targeted) = self.EMOTES[cmd] # Get the aimless and targeted text for that emote.
+        actor_name = self._key2name(key)       # Get the name of the actor.
+        (player_zone, player_room) = self._get_zone_and_room(key) # Get the zone and room of the player.
+        players = self.ZONES[player_zone].ROOMS[player_room].PLAYERS.keys() # Get a list of users in that room.
+        player_names = self.ZONES[player_zone].ROOMS[player_room].PLAYERS.values() # Get a list of user names.
+        
+        # Now we need to fix gender-specific wording.
+        aimless  = self._fix_gender(aimless,  key)
+        targeted = self._fix_gender(targeted, key)
+        
+        if(len(modifiers) > 0):
+            # If there is a target, act accordingly.
+            target_name = self._auto_complete(modifiers[0], player_names)
+            target_key  = self._name2key(target_name)
+            text = targeted.replace('$NAME', actor_name) # Insert the actor name.
+            
+            # Now send off the message.
+            if(target_key in players):
+                # This target exists.
+                for player in players:
+                    if(player == key):
+                        # This is the actor.
+                        out = text.replace('$TARGET', target_name)
+                        self.PLAYERS[player].send('You emote: %s' % (out))
+                    elif(player == target_key):
+                        # This is the target.
+                        out = text.replace('$TARGET', 'you')
+                        self.PLAYERS[player].send(out)
+                    else:
+                        # This is someone else.
+                        out = text.replace('$TARGET', target_name)
+                        self.PLAYERS[player].send(out)
+            else:
+                # This target does not exist.
+                self.PLAYERS[key].send('You do not see that person here!')
+        else:
+            # If there's no target designated, use the aimless emote.
+            text = aimless.replace('$NAME', actor_name) # Insert the actor name.
+            for player in players:
+                # Send the message to every player.
+                if(player == key):
+                    # This is the actor.
+                    self.PLAYERS[player].send('You emote: %s' % (text))
+                else:
+                    # This is another person in the room.
+                    self.PLAYERS[player].send(text)
+    
+    
     def _drop_player(self, client):
         # Remove a player from our list of connected clients.
         del self.PLAYERS[client.addrport()]
+    
+    
+    def _fix_gender(self, text, key):
+        # Fix the gender of the provided text based on the key provided.
+        gender   = 0 if(self.PLAYERS[key].SEX == 'male') else 1 # 0 = male, 1 = female
+        text_in  = text.split(' ')
+        text_out = []
+        for word in text_in:
+            # Check each word for alternatives.
+            if('/' in word):
+                # If the word has gender options, use the correct gender.
+                word = word.split('/')[gender]
+            text_out.append(word)
+        return ' '.join(text_out)
     
     
     def _get_exit_name(self, current, target):
@@ -333,7 +397,7 @@ class world:
             # Otherwise, attempt to auto-complete the command.
             
             # Combine all available commands into a single list.
-            available_commands = self.COMMANDS + exits
+            available_commands = self.COMMANDS + exits + list(self.EMOTES.keys())
             # Then we sort the list.
             available_commands.sort()
             
@@ -351,6 +415,9 @@ class world:
                     # The command they provided is one of the exits. So, move them to that room.
                     target_room = self.ZONES[player_zone].ROOMS[player_room].EXITS[cmd]
                     self._move(key, target_room)
+                elif(cmd in self.EMOTES.keys()):
+                    # The command is an emote. Run the emote processor.
+                    self._custom_emote(key, cmd, modifiers)
         else:
             # The command was not found in the auto_complete.
             self.PLAYERS[key].send("I'm sorry, I don't understand the command '%s'." % (command))
@@ -424,3 +491,12 @@ class world:
             self.ALIVE = False
         else:
             log('Sanity check passed!')
+        # Now load up our list of custom emotes.
+        self.EMOTES = {} # Initialize the empty list.
+        lines = open('world/text/emotes.txt','r').read().split('\n') # Read the emotes file into lines.
+        for line in lines:
+            parts = line.split(':')
+            if(len(parts) == 3):
+                # The current line is an emotion definition.
+                self.EMOTES[parts[0]] = (parts[1], parts[2]) # Parts[1] is the aimless emote, parts[2] is the targeted emote.
+        log('%d emotes loaded.' % (len(self.EMOTES)),'>')

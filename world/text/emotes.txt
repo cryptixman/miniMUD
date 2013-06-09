@@ -1,0 +1,13 @@
+# This file defines custom emotes. Genders should be separated by a forward-slash (/) and male should preceed female.
+# Each emote has three parts, separated by a colon (:).
+# The first part is the emote command.
+# The second part is the aimless command, for when there are no targets specified.
+# The third part is the targeted command, for when the user specifies a target.
+
+dance:$NAME dances around, waving his/her arms and kicking his/her feet.:$NAME dances with $TARGET.
+hug:$NAME hugs himself/herself and smiles.:$NAME gives $TARGET a warm hug.
+lol:$NAME laughs out loud!:$NAME laughs heartily at $TARGET.
+point:$NAME points his/her finger around the room accusingly.:$NAME points his/her finger at $TARGET.
+sigh:$NAME sighs to himself./herself.:$NAME sighs at $TARGET.
+sing:$NAME sings a little tune.:$NAME sings a song for $TARGET.
+wave:$NAME waves his/her arms in the air.:$NAME waves at $TARGET.
