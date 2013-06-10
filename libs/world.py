@@ -56,18 +56,21 @@ class world:
     
     def emote(self, key, modifiers):
         # The user wants to emote something to the people in the room.
-        message = ' '.join(modifiers) # Coagulate the message.
-        speaker = self._key2name(key) # Get the name of the speaker.
-        self.PLAYERS[key].send('You emote: %s %s' % (speaker, message)) # Tell the speaker what they've emoted.
-        # Now we need to get all the keys of all the players in the room.
-        # We start by getting the zone and room ID for the speaking player.
-        (player_zone, player_room) = self._get_zone_and_room(key)
-        # Now that that's taken care of, let's get the player list.
-        players = self.ZONES[player_zone].ROOMS[player_room].PLAYERS.keys()
-        # Now, let's send them the emote.
-        for player in players:
-            if(player != key):
-                self.PLAYERS[player].send('%s %s' % (speaker, message))
+        if(len(modifiers) > 0):
+            message = ' '.join(modifiers) # Coagulate the message.
+            speaker = self._key2name(key) # Get the name of the speaker.
+            self.PLAYERS[key].send('You emote: %s %s' % (speaker, message)) # Tell the speaker what they've emoted.
+            # Now we need to get all the keys of all the players in the room.
+            # We start by getting the zone and room ID for the speaking player.
+            (player_zone, player_room) = self._get_zone_and_room(key)
+            # Now that that's taken care of, let's get the player list.
+            players = self.ZONES[player_zone].ROOMS[player_room].PLAYERS.keys()
+            # Now, let's send them the emote.
+            for player in players:
+                if(player != key):
+                    self.PLAYERS[player].send('%s %s' % (speaker, message))
+        else:
+            self.PLAYERS[key].send('You must specify something to emote!')
     
     
     def help(self, key, modifiers):
@@ -115,18 +118,21 @@ class world:
     
     def say(self, key, modifiers):
         # The user wants to say something to the people in the room.
-        message = ' '.join(modifiers) # Coagulate the message.
-        speaker = self._key2name(key) # Get the name of the speaker.
-        self.PLAYERS[key].send('You say: %s' % (message)) # Tell the speaker what they've said.
-        # Now we need to get all the keys of all the players in the room.
-        # We start by getting the zone and room ID for the speaking player.
-        (player_zone, player_room) = self._get_zone_and_room(key) # Get the zone and room of the player.
-        # Now that that's taken care of, let's get the player list.
-        players = self.ZONES[player_zone].ROOMS[player_room].PLAYERS.keys()
-        # Now, let's send them the message.
-        for player in players:
-            if(player != key):
-                self.PLAYERS[player].send('%s says: %s' % (speaker, message))
+        if(len(modifiers) > 0):
+            message = ' '.join(modifiers) # Coagulate the message.
+            speaker = self._key2name(key) # Get the name of the speaker.
+            self.PLAYERS[key].send('You say: %s' % (message)) # Tell the speaker what they've said.
+            # Now we need to get all the keys of all the players in the room.
+            # We start by getting the zone and room ID for the speaking player.
+            (player_zone, player_room) = self._get_zone_and_room(key) # Get the zone and room of the player.
+            # Now that that's taken care of, let's get the player list.
+            players = self.ZONES[player_zone].ROOMS[player_room].PLAYERS.keys()
+            # Now, let's send them the message.
+            for player in players:
+                if(player != key):
+                    self.PLAYERS[player].send('%s says: %s' % (speaker, message))
+        else:
+            self.PLAYERS[key].send('You must specify something to say!')
     
     
     def shutdown(self, key, modifiers):

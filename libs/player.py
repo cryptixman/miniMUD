@@ -273,7 +273,7 @@ class player:
         rows = self.CLIENT.rows
         columns = self.CLIENT.columns
         (self.BUFFER, output) = wrap(message, rows, columns)
-        self.CLIENT.send('\n%s\n%s ' % (output, self.prompt()))
+        self.CLIENT.send_cc('\n%s\n%s ' % (output, self.prompt()))
     
     
     def set_tick_delay(self, ticks):

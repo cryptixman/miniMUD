@@ -3,8 +3,8 @@ settings:none
 
 # A description of the room. Ends with '---'.
 description:
-    You are standing at the point from which all life originated on this world. All around you, a thick and vibrant forest flourishes, overgrown with trees and insects and various creatures in all shapes and sizes. However, this tree, the Tree of Life, stands alone in a wide clearing, where the sun and the moons can grant it nourishment without interference. There is a sense of stillness in the air, of solemn serenity.
-    The Tree of Life is the point from which all adventurers begin their quest. They come from all corners of the world to the Tree of Life, seeking the blessing and protection of the Tree in their journeys and conquests. It is believed that the restorative power of the Tree of Life is what allows these adventurers to be resurrected upon death, rather than being reintegrated into the ether.
+    You are standing at the point from which all life originated on this world. All around you, a thick and vibrant forest flourishes, overgrown with trees and insects and various creatures in all shapes and sizes. However, this tree, the ^gTree of Life^~, stands alone in a wide clearing, where the sun and the moons can grant it nourishment without interference. There is a sense of stillness in the air, of solemn serenity.
+    The ^gTree of Life^~ is the point from which all adventurers begin their quest. They come from all corners of the world to the ^gTree of Life^~, seeking the blessing and protection of the Tree in their journeys and conquests. It is believed that the restorative power of the ^gTree of Life^~ is what allows these adventurers to be resurrected upon death, rather than being reintegrated into the ether.
 ---
 
 # Room exits. (zone.room)

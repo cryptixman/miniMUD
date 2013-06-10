@@ -51,11 +51,11 @@ class room:
     
     def get_desc(self, viewer):
         # Describe the room to the viewer.
-        desc = '%s\n%s' % (self.NAME, self.DESC)
+        desc = '^W^U%s^~\n%s' % (self.NAME, self.DESC)
         exits = self.exits()
         if(exits == []):
             exits = ['None']
-        desc = '%s\n\nExits: %s' % (desc, (', '.join(exits)))
+        desc = '%s\n\n^y^UExits^u: %s^~' % (desc, (', '.join(exits)))
         players = []
         for key in self.PLAYERS.keys():
             # Make a list of all players in the room except the current user.
@@ -63,7 +63,7 @@ class room:
                 players.append(self.PLAYERS[key])
         if(players == []):
             players = ['None']
-        desc = '%s\nPlayers: %s' % (desc, ', '.join(players))
+        desc = '%s\n^c^UPlayers^u: %s^~' % (desc, ', '.join(players))
         return desc
     
     

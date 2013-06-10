@@ -1,8 +1,8 @@
 TODO
 
+- Add the 'who' command.
 - Figure out how to use "help" and populate it with commands and give information about the game.
 - Prevent users from registering names that are reserved. (Commands, already registered names, NPCs, items, etc.)
-- Add color.
 - Set up zone reset without booting users. (Specified zones or all zones.)
 
 FUTURE IDEAS
@@ -11,5 +11,5 @@ FUTURE IDEAS
   If there is no exit, simply say "They arrived." Otherwise, say "They arrived from the %exitname%."
 
 UPDATE NOTES
-- Fixed the exit bug. Now if there are no exits from the room, it says 'None' instead of being blank.
-- Fixed a bug where users trying to access invalid exits would crash the game. Now they are dropped into 0.0 by default.
+- Added color.
+- Fixed the problem where users can say and emote nothing.
