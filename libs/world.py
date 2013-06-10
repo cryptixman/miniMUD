@@ -234,6 +234,8 @@ class world:
                     elif(player == target_key):
                         # This is the target.
                         out = text.replace('$TARGET', 'you')
+                        out = out.replace("you's", 'your')
+                        out = out.replace('you is', 'you are')
                         self.PLAYERS[player].send(out)
                     else:
                         # This is someone else.
