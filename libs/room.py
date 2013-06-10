@@ -55,7 +55,7 @@ class room:
         exits = self.exits()
         if(exits == []):
             exits = ['None']
-        desc = '%s\n\nExits: %s' % (desc, ', '.join(self.exits()))
+        desc = '%s\n\nExits: %s' % (desc, (', '.join(exits)))
         players = []
         for key in self.PLAYERS.keys():
             # Make a list of all players in the room except the current user.

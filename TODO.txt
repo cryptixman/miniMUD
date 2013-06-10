@@ -1,7 +1,5 @@
 TODO
 
-- Fix exits so that if there are no exits, show 'None' instead of a blank.
-- Fix system so that if the user can't be placed in their last location, they are placed in 0.0 by default.
 - Figure out how to use "help" and populate it with commands and give information about the game.
 - Prevent users from registering names that are reserved. (Commands, already registered names, NPCs, items, etc.)
 - Add color.
@@ -9,3 +7,9 @@ TODO
 
 FUTURE IDEAS
 
+- Work out a way to say "So and so arrives from the north." Basically, reverse-lookup the exit in the current room that references the room a user arrived from.
+  If there is no exit, simply say "They arrived." Otherwise, say "They arrived from the %exitname%."
+
+UPDATE NOTES
+- Fixed the exit bug. Now if there are no exits from the room, it says 'None' instead of being blank.
+- Fixed a bug where users trying to access invalid exits would crash the game. Now they are dropped into 0.0 by default.

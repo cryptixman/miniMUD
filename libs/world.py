@@ -350,6 +350,28 @@ class world:
         target_zone = rm.split('.')[0]       # Next, find out where they're going. Zone,
         target_room = rm.split('.')[1]       # and room.
         
+        try:
+            # The following tests if the target is a valid room. If this crashes, the target is reset to 0.0.
+            target = self.ZONES[target_zone].ROOMS[target_room].ID
+        except:
+            # Be sure to let the admins know that there was a problem.
+            log('%s (%s) attempted entry into invalid room %s.' % (self.PLAYERS[key].ID, self.PLAYERS[key].NAME, rm), '!')
+            # Then reset the target zone and room.
+            target_zone = '0'
+            target_room = '0'
+            rm = '0.0'
+        
+        try:
+            # Likewise, this performs a sanity check on the current room. If this crashes, the current room is reset to 0.0.
+            target = self.ZONES[current_zone].ROOMS[current_room].ID
+        except:
+            # Let the admins know.
+            log('%s (%s) attempted to exit invalid room %s.' % (self.PLAYERS[key].ID, self.PLAYERS[key].NAME, current), '!')
+            # Then reset the current zone and room.
+            current_zone = '0'
+            current_room = '0'
+            current = '0.0'
+        
         removed = self.ZONES[current_zone].ROOMS[current_room].drop_player(key) # Remove the player from their current room.
         if(removed): # This only happens if the player actually existed in the room they were dropped from.
             # Tell everyone in the room of that player's departure.
