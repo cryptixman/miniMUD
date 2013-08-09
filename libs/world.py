@@ -8,6 +8,7 @@ from libs.log import log
 import time, textwrap, glob
 
 class world:
+    
     """ Just a few variables. """
     PLAYERS = {}      # A dict of connected players, with addrport() as key.
     ALIVE = True      # Is the server alive?

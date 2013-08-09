@@ -11,5 +11,3 @@ FUTURE IDEAS
   If there is no exit, simply say "They arrived." Otherwise, say "They arrived from the %exitname%."
 
 UPDATE NOTES
-- Added color.
-- Fixed the problem where users can say and emote nothing.

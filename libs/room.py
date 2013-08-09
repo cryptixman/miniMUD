@@ -72,6 +72,7 @@ class room:
         shortname = '%s.%s.room' % (self.ID, self.NAME)                # Get the filename.
         longname  = 'world/zones/%s/rooms/%s' % (self.ZONE, shortname) # Get the entire file path.
         lines = open(longname, 'r').read().split('\n')                 # Read the lines from the file.
+        self.EXITS = {} # Reset the exit list.
         while(len(lines) > 0):
             # Process each line.
             line = lines.pop(0) # Grab a line.
